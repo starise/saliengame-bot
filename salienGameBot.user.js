@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         Steam Saliens 2018 - Bot
-// @namespace    https://github.com/starise/steam-saliens-bot
+// @name         SalienGame Bot
+// @namespace    https://github.com/starise/saliengame-bot
 // @version      0.0.1
 // @author       starise
 // @match        *://steamcommunity.com/saliengame/*
 // @grant        none
-// @downloadURL  https://raw.githubusercontent.com/starise/steam-saliens-bot/master/saliensBot.user.js
-// @updateURL    https://raw.githubusercontent.com/starise/steam-saliens-bot/master/saliensBot.user.js
+// @downloadURL  https://raw.githubusercontent.com/starise/saliengame-bot/master/salienGameBot.user.js
+// @updateURL    https://raw.githubusercontent.com/starise/saliengame-bot/master/salienGameBot.user.js
 // ==/UserScript==
 
 (function(w) {
