@@ -23,7 +23,6 @@ const EnemyManager = function EnemyManager() {
 const AttackManager = function AttackManager() {
     return GAME.m_State.m_AttackManager;
 }
-
 const TryContinue = function Continue() {
     let continued = false;
     if (GAME.m_State.m_VictoryScreen) {
@@ -34,7 +33,7 @@ const TryContinue = function Continue() {
             }
         })
     }
-    if (GAME.m_State.m_LevelUpScreen)
+    if (GAME.m_State.m_LevelUpScreen) {
         continued = false;
         GAME.m_State.m_LevelUpScreen.children.forEach(function(child) {
             if (child.visible && child.x == 155 && child.y == 300) {// TODO: not this
@@ -45,7 +44,13 @@ const TryContinue = function Continue() {
     }
     return continued;
 }
-
+const CanAttack = function CanAttack(attackname) {
+    let Manager = AttackManager().m_mapCooldowns.get(attackname);
+    let lastUsed = Manager.m_rtAttackLastUsed;
+    let canAttack = Manager.BAttack();
+    Manager.m_rtAttackLastUsed = lastUsed;
+    return canAttack;
+}
 
 // Let's challenge ourselves to be human here!
 const CLICKS_PER_SECOND = 10;
@@ -55,13 +60,13 @@ const InGame = function InGame() {
 }
 
 const InZoneSelect = function InZoneSelect() {
-    return GAME.m_State instanceof CBattleSelectionState; 
+    return GAME.m_State instanceof CBattleSelectionState;
 }
 
 const WORST_SCORE = -1 / 0;
 const START_POS = pixi.renderer.width;
 
-let lastZoneIndex;
+// context.lastZoneIndex;
 let isJoining = false;
 
 const EnemySpeed = function EnemySpeed(enemy) {
@@ -76,7 +81,7 @@ class Attack {
     constructor() {
         this.nextAttackDelta = 0;
     }
-    shouldAttack(delta) {
+    shouldAttack(delta, enemies) {
         throw new Error("shouldAttack not implemented");
     }
     process(enemies) {
@@ -87,6 +92,9 @@ class Attack {
 // Basic clicking attack, attack closest
 class ClickAttack extends Attack {
     shouldAttack(delta) {
+        // Can't do basic attack when station is down
+        if (GAME.m_State.m_PlayerHealth <= 0)
+            return false;
         this.nextAttackDelta -= delta;
         return this.nextAttackDelta <= 0;;
     }
@@ -130,11 +138,7 @@ class SpecialAttack extends Attack {
         return AttackManager().m_AttackData[this.getCurrent()];
     }
     shouldAttack(delta) {
-        let Manager = AttackManager().m_mapCooldowns.get(this.getCurrent());
-        let lastUsed = Manager.m_rtAttackLastUsed;
-        let canAttack = Manager.BAttack();
-        Manager.m_rtAttackLastUsed = lastUsed;
-        return canAttack
+        return CanAttack(this.getCurrent());
     }
     score(enemy) {
         if (enemy.m_bDead)
@@ -162,9 +166,40 @@ class SpecialAttack extends Attack {
     }
 }
 
+class BombAttack extends SpecialAttack {
+    getCurrent() {
+        return "explosion";
+    }
+}
+
+class FreezeAttack extends Attack {
+    getCurrent() {
+        return "flashfreeze";
+    }
+    shouldAttack(delta, enemies) {
+        let shouldAttack = false;
+        if (CanAttack(this.getCurrent())) {
+            enemies.forEach((enemy) => {
+                if (EnemyDistance(enemy) <= 0.05) {
+                    shouldAttack = true;
+                }
+            });
+        }
+        return shouldAttack;
+    }
+    getData() {
+        return AttackManager().m_AttackData[this.getCurrent()];
+    }
+    process() {
+        AttackManager().m_mapKeyCodeToAttacks.get(this.getData().keycode)()
+    }
+}
+
 let attacks = [
     new ClickAttack(),
-    new SpecialAttack()
+    new SpecialAttack(),
+    new FreezeAttack(),
+    new BombAttack()
 ]
 
 if (context.BOT_FUNCTION) {
@@ -179,23 +214,26 @@ context.BOT_FUNCTION = function ticker(delta) {
         return;
     }
 
-    if(GAME.m_State.m_bRunning === false) {
-        GAME.ChangeState( new CBattleSelectionState( gGame.m_State.m_PlanetData.id ));
-    }
-
-    if(InZoneSelect() && lastZoneIndex > 0 && !isJoining) {
+    if (InZoneSelect() && context.lastZoneIndex !== undefined && !isJoining) {
         isJoining = true;
+
+        if (GAME.m_State.m_PlanetData.zones[context.lastZoneIndex].captured)
+        {
+            context.lastZoneIndex = undefined;
+            return;
+        }
+
         SERVER.JoinZone(
             lastZoneIndex,
-            function ( results ) {
-                gGame.ChangeState( new CBattleState( GAME.m_State.m_PlanetData, lastZoneIndex ) );
+            function (results) {
+                GAME.ChangeState(new CBattleState(GAME.m_State.m_PlanetData, context.lastZoneIndex));
             },
             GameLoadError
-            );
-        
-        return;  
-    }
+        );
 
+        return;
+    }
+33
     if (!InGame()) {
         if (TryContinue()) {
             console.log("continued!");
@@ -204,14 +242,14 @@ context.BOT_FUNCTION = function ticker(delta) {
     }
 
     isJoining = false;
-    lastZoneIndex = GAME.m_State.m_unZoneIndex;    
+    context.lastZoneIndex = GAME.m_State.m_unZoneIndex;
 
     let state = EnemyManager();
 
     let enemies = state.m_rgEnemies;
 
     for (let attack of attacks)
-        if (attack.shouldAttack(delta))
+        if (attack.shouldAttack(delta, enemies))
             attack.process(enemies);
 
 }
