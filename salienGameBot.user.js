@@ -76,6 +76,13 @@ const EnemyDistance = function EnemyDistance(enemy) {
     return (enemy.m_Sprite.x - k_nDamagePointx) / (START_POS - k_nDamagePointx);
 }
 
+const EnemyCenter = function EnemyCenter(enemy) {
+    return [
+        enemy.m_Sprite.x + enemy.m_Sprite.width / 2,
+        enemy.m_Sprite.y + enemy.m_Sprite.height / 2
+    ];
+}
+
 
 class Attack {
     constructor() {
@@ -86,6 +93,15 @@ class Attack {
     }
     process(enemies) {
         throw new Error("process not implemented");
+    }
+    getAttackName() {
+        throw new Error("no current attack name");
+    }
+    canAttack() {
+        return CanAttack(this.getAttackName());
+    }
+    getAttackData() {
+        return AttackManager().m_AttackData[this.getAttackName()];
     }
 }
 
@@ -124,21 +140,9 @@ class ClickAttack extends Attack {
     }
 }
 
-// the '1' button (SlimeAttack PsychicAttack BeastAttack - depends on body type of your salien)
-class SpecialAttack extends Attack {
-    getCurrent() {
-        if (gSalien.m_BodyType == "slime")
-            return "slimeattack";
-        else if (gSalien.m_BodyType == "beast")
-            return "beastattack";
-        else
-            return "psychicattack";
-    }
-    getData() {
-        return AttackManager().m_AttackData[this.getCurrent()];
-    }
+class ProjectileAttack extends Attack {
     shouldAttack(delta) {
-        return CanAttack(this.getCurrent());
+        return CanAttack(this.getAttackName());
     }
     score(enemy) {
         if (enemy.m_bDead)
@@ -158,17 +162,34 @@ class SpecialAttack extends Attack {
         });
 
         if (target)
-            this.attack(target.m_Sprite.x, target.m_Sprite.y);
+            this.attack.apply(this, EnemyCenter(target));
     }
     attack(x, y) {
         SetMouse(x, y)
-        AttackManager().m_mapKeyCodeToAttacks.get(this.getData().keycode)()
+        AttackManager().m_mapKeyCodeToAttacks.get(this.getAttackData().keycode)()
     }
 }
 
-class BombAttack extends SpecialAttack {
-    getCurrent() {
+// the '1' button (SlimeAttack PsychicAttack BeastAttack - depends on body type of your salien)
+class SpecialAttack extends ProjectileAttack {
+    getAttackName() {
+        if (gSalien.m_BodyType == "slime")
+            return "slimeattack";
+        else if (gSalien.m_BodyType == "beast")
+            return "beastattack";
+        else
+            return "psychicattack";
+    }
+}
+
+class BombAttack extends ProjectileAttack {
+    getAttackName() {
         return "explosion";
+    }
+}
+class BlackholeAttack extends ProjectileAttack {
+    getAttackName() {
+        return "blackhole";
     }
 }
 
@@ -199,7 +220,8 @@ let attacks = [
     new ClickAttack(),
     new SpecialAttack(),
     new FreezeAttack(),
-    new BombAttack()
+    new BombAttack(),
+    new BlackholeAttack()
 ]
 
 if (context.BOT_FUNCTION) {
@@ -253,7 +275,6 @@ context.BOT_FUNCTION = function ticker(delta) {
             attack.process(enemies);
 
 }
-
 
 pixi.ticker.add(context.BOT_FUNCTION);
 
