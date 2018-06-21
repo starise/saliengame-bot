@@ -1,6 +1,6 @@
-## Steam Saliens Game - Bot
+## SalienGame Bot
 
-Steam Saliens Auto-play / Auto-Click script for Tempermonkey. 
+Steam SalienGame Auto-play / Auto-Click script for Tampermonkey. 
 
 ### Credits
 
