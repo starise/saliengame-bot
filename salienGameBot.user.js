@@ -9,18 +9,28 @@
 // @updateURL    https://raw.githubusercontent.com/starise/saliengame-bot/master/salienGameBot.user.js
 // ==/UserScript==
 
-(function(w) {
-	"use strict";
-
+(function(context) {
+const pixi = gApp;
 const GAME = gGame;
+const SetMouse = function SetMouse(x, y) {
+    pixi.renderer.plugins.interaction.mouse.global.x = x;
+    pixi.renderer.plugins.interaction.mouse.global.y = y;
+}
+const EnemyManager = function EnemyManager() {
+    return GAME.m_State.m_EnemyManager;
+}
+const AttackManager = function AttackManager() {
+    return GAME.m_State.m_AttackManager;
+}
+// Let's challenge ourselves to be human here!
 const CLICKS_PER_SECOND = 10;
 
 const InGame = function InGame() {
-    return GAME.m_State.m_EnemyManager && GAME.m_State.m_EnemyManager.m_bIsInteractive; 
+    return GAME.m_State.m_bRunning;
 }
 
 const WORST_SCORE = -1 / 0;
-const START_POS = gApp.renderer.width;
+const START_POS = pixi.renderer.width;
 
 
 const EnemySpeed = function EnemySpeed(enemy) {
@@ -32,13 +42,23 @@ const EnemyDistance = function EnemyDistance(enemy) {
 
 
 class Attack {
+    constructor() {
+        this.nextAttackDelta = 0;
+    }
+    shouldAttack(delta) {
+        throw new Error("shouldAttack not implemented");
+    }
     process(enemies) {
-        throw new Error("not implemented");
+        throw new Error("process not implemented");
     }
 }
 
 // Basic clicking attack, attack closest
 class ClickAttack extends Attack {
+    shouldAttack(delta) {
+        this.nextAttackDelta -= delta;
+        return this.nextAttackDelta <= 0;;
+    }
     score(enemy) {
         if (enemy.m_bDead)
             return WORST_SCORE;
@@ -61,24 +81,84 @@ class ClickAttack extends Attack {
     }
     attack(enemy) {
         enemy.m_Sprite.click();
+        this.nextAttackDelta = 1 / CLICKS_PER_SECOND;
+    }
+}
+
+// the '1' button (SlimeAttack PsychicAttack BeastAttack - depends on body type of your salien)
+class SpecialAttack extends Attack {
+    getCurrent() {
+        if (gSalien.m_BodyType == "slime")
+            return "slimeattack";
+        else if (gSalien.m_BodyType == "beast")
+            return "beastattack";
+        else
+            return "psychicattack";
+    }
+    getData() {
+        return AttackManager().m_AttackData[this.getCurrent()];
+    }
+    shouldAttack(delta) {
+        let Manager = AttackManager().m_mapCooldowns.get(this.getCurrent());
+        let lastUsed = Manager.m_rtAttackLastUsed;
+        let canAttack = Manager.BAttack();
+        Manager.m_rtAttackLastUsed = lastUsed;
+        return canAttack
+    }
+    score(enemy) {
+        if (enemy.m_bDead)
+            return WORST_SCORE;
+        return enemy.m_nHealth;
+    }
+    process(enemies) {
+        let target, target_score = WORST_SCORE;
+
+        enemies.forEach((enemy) => {
+            if (!enemy.m_Sprite.visible)
+                return;
+            let now_score = this.score(enemy);
+            if (now_score > target_score) {
+                target = enemy, target_score = now_score;
+            }
+        });
+
+        if (target)
+            this.attack(target.m_Sprite.x, target.m_Sprite.y);
+    }
+    attack(x, y) {
+        SetMouse(x, y)
+        AttackManager().m_mapKeyCodeToAttacks.get(this.getData().keycode)()
     }
 }
 
 let attacks = [
     new ClickAttack(),
+    new SpecialAttack()
 ]
 
-setInterval(function game_think() {
-    let state = GAME.m_State.m_EnemyManager;
+if (context.BOT_FUNCTION) {
+    pixi.ticker.remove(context.BOT_FUNCTION);
+    context.BOT_FUNCTION = undefined;
+}
+
+context.BOT_FUNCTION = function ticker(delta) {
+    delta /= 100;
 
     if (!InGame()) {
         return;
     }
 
+    let state = EnemyManager();
+
     let enemies = state.m_rgEnemies;
 
     for (let attack of attacks)
-        attack.process(enemies);
-}, 1000 / CLICKS_PER_SECOND);
+        if (attack.shouldAttack(delta))
+            attack.process(enemies);
 
-}(window));
+}
+
+
+pixi.ticker.add(context.BOT_FUNCTION);
+
+})(window);
