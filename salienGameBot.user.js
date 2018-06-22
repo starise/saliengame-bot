@@ -78,7 +78,7 @@ const EnemyDistance = function EnemyDistance(enemy) {
 
 const EnemyCenter = function EnemyCenter(enemy) {
     return [
-        enemy.m_Sprite.x + enemy.m_Sprite.width / 2,
+        enemy.m_Sprite.x + enemy.m_Sprite.width / 2 - 100,
         enemy.m_Sprite.y + enemy.m_Sprite.height / 2
     ];
 }
