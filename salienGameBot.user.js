@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SalienGame Bot
 // @namespace    https://github.com/starise/saliengame-bot
-// @version      0.0.5
+// @version      0.0.6
 // @author       starise
 // @match        *://steamcommunity.com/saliengame/*
 // @grant        none
