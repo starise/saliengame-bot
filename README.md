@@ -1,10 +1,10 @@
 ## SalienGame Bot
 
-Steam SalienGame Auto-play / Auto-Click script for Tampermonkey. 
+Steam SalienGame Auto-play / Auto-Click script for Tampermonkey.
 
-### Credits
+## Useful Links
 
-Thanks to meepen.
+- [Saliens Planet](https://mlomb.github.io/SalienBot/) - Check planets status and winners
 
 ## Alternative bots
 
