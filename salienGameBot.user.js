@@ -29,7 +29,7 @@ const TryContinue = function Continue() {
         GAME.m_State.m_VictoryScreen.children.forEach(function(child) {
             if (child.visible && child.x == 155 && child.y == 300) {// TODO: not this
                 continued = true;
-                child.click();
+                child.pointertap();
             }
         })
     }
@@ -38,7 +38,7 @@ const TryContinue = function Continue() {
         GAME.m_State.m_LevelUpScreen.children.forEach(function(child) {
             if (child.visible && child.x == 155 && child.y == 300) {// TODO: not this
                 continued = true;
-                child.click();
+                child.pointertap();
             }
         })
     }
@@ -135,7 +135,7 @@ class ClickAttack extends Attack {
             this.attack(target);
     }
     attack(enemy) {
-        enemy.m_Sprite.click();
+        enemy.m_Sprite.pointertap();
         this.nextAttackDelta = 1 / CLICKS_PER_SECOND;
     }
 }
