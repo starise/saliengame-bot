@@ -76,9 +76,9 @@ const EnemyDistance = function EnemyDistance(enemy) {
     return (enemy.m_Sprite.x - k_nDamagePointx) / (START_POS - k_nDamagePointx);
 }
 
-const EnemyCenter = function EnemyCenter(enemy) {
+const AimPoint = function AimPoint(enemy) {
     return [
-        enemy.m_Sprite.x + enemy.m_Sprite.width / 2 - 100,
+        enemy.m_Sprite.x + enemy.m_Sprite.width / 2 + (EnemySpeed(enemy) * 20),
         enemy.m_Sprite.y + enemy.m_Sprite.height / 2
     ];
 }
@@ -162,7 +162,7 @@ class ProjectileAttack extends Attack {
         });
 
         if (target)
-            this.attack.apply(this, EnemyCenter(target));
+            this.attack.apply(this, AimPoint(target));
     }
     attack(x, y) {
         SetMouse(x, y)
