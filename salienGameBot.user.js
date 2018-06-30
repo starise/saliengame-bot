@@ -274,7 +274,7 @@ context.BOT_FUNCTION = function ticker(delta) {
 
     let state = EnemyManager();
 
-    let enemies = state.m_rgEnemies;
+    let enemies = state.m_mapEnemies;
 
     for (let attack of attacks)
         if (attack.shouldAttack(delta, enemies))
