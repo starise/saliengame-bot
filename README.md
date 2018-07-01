@@ -4,7 +4,9 @@ Steam SalienGame Auto-play / Auto-Click script for Tampermonkey.
 
 ## Useful Links
 
-- [Saliens Planet](https://mlomb.github.io/SalienBot/) - Check planets status and winners
+- [Saliens Planet (mlomb)](https://mlomb.github.io/SalienBot/) - Status of planets and winners
+- [Saliens Planet (wtzb)](https://wtzb.github.io/SalienProgress/) - Status of planets and winners (more info, less beautiful)
+- [Saliens Outfit](http://ksir.pw/saliens/) - Collection of every single Salien outfit listed on community market
 
 ## Alternative bots
 
